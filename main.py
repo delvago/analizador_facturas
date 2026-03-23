@@ -1,30 +1,22 @@
-from fastapi import FastAPI
+import os
+from fastapi import FastAPI, Depends
 from pydantic import BaseModel #Librería que define de que forma recibe los datos la API
 from datetime import date
-from sqlalchemy import Column, Integer, String, Float, Date
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-import os
+from sqlalchemy import Column, Integer, String, Float, Date, create_engine
+from sqlalchemy.orm import sessionmaker, Session, declarative_base
 
-#Variables de entorno
+# ==========================================
+# 1. CONFIGURACIÓN DE LA BASE DE DATOS
+# ==========================================
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-#FastAPI
-app= FastAPI()
-
-#Base de datos
-Base = declarative_base()
 engine = create_engine(DATABASE_URL) #Base de datos a utilizar 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine) #Gestor de sesiones de la API
-Base.metadata.create_all(bind=engine) #Crea la estructura de la base de datos en caso de que no exista
+Base = declarative_base()
 
-class Gasto(BaseModel):
-    fecha: date
-    valor: float
-    categoria: str
-    id_usuario: int
-    
+# ==========================================
+# 2. CONFIGURACIÓN SQLALCHEMY (La Tabla)
+# ==========================================
 class GastoDB(Base):
     __tablename__ = "gastos"
     id = Column(Integer, primary_key=True, index=True)
@@ -32,13 +24,46 @@ class GastoDB(Base):
     valor = Column(Float)
     categoria = Column(String)
     id_usuario = Column(Integer)
-    
 
+Base.metadata.create_all(bind=engine) #Crea la estructura de la base de datos en caso de que no exista
+
+# ==========================================
+# 3. CONFIGURACIÓN DE FASTAPI Y PYDANTIC
+# ==========================================
+app = FastAPI()
+
+class Gasto(BaseModel):
+    fecha: date
+    valor: float
+    categoria: str
+    id_usuario: int
+    
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+        
+# ==========================================
+# 4. RUTAS DE LA API
+# ==========================================
 @app.get("/")
 def ruta_principal():
     return {"mensaje":"API del analizador de Gastos activa"}
 
 @app.post("/gastos/")
-def crear_gasto(nuevo_gasto: Gasto):
-    # Añadir conexión con la base de datos
-    return {"mensaje": "Gasto recibido correctamente", "gasto": nuevo_gasto}
+def crear_gasto(nuevo_gasto: Gasto, db: Session = Depends(get_db)):
+    # Empaquetado de los datos para la base de datos
+    gasto_db = GastoDB(
+        fecha=nuevo_gasto.fecha,
+        valor=nuevo_gasto.valor,
+        categoria=nuevo_gasto.categoria,
+        id_usuario=nuevo_gasto.id_usuario
+    )
+    # Guardado de datos en PostgreSQL
+    db.add(gasto_db)
+    db.commit()
+    db.refresh(gasto_db)
+    
+    return {"mensaje": "Gasto guardado con éxito", "gasto": gasto_db}
