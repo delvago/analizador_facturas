@@ -27,9 +27,17 @@ services:
     - db
     volumes:
     - n8n_data:/home/node/.n8n
+  
+  frontend:
+    build: ./frontend
+    ports:
+    - "3000:3000"
+    volumes:
+    - ./frontend:/app
 
 volumes:
   postgres_data:
   n8n_data:
+  frontend:
 
 
