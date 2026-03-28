@@ -37,6 +37,9 @@ class Gasto(BaseModel):
     valor: float
     categoria: str
     id_usuario: int
+
+class FacturaRecibida(BaseModel):
+    texto: str
     
 def get_db():
     db = SessionLocal()
@@ -50,7 +53,12 @@ def get_db():
 # ==========================================
 @app.get("/")
 def ruta_principal():
-    return {"mensaje":"API del analizador de Gastos activa"}
+    return {"mensaje" : "API del analizador de Gastos activa"}
+
+@app.post("/factura/")
+def procesar_factura(factura: FacturaRecibida):
+    return {"mensaje" : f"{factura.texto} factura recibida"}
+
 
 @app.post("/gastos/")
 def crear_gasto(nuevo_gasto: Gasto, db: Session = Depends(get_db)):
@@ -66,4 +74,4 @@ def crear_gasto(nuevo_gasto: Gasto, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(gasto_db)
     
-    return {"mensaje": "Gasto guardado con éxito", "gasto": gasto_db}
+    return {"mensaje" : "Gasto guardado con éxito", "gasto": gasto_db}

@@ -13,6 +13,8 @@ services:
     build: .
     ports:
     - "8000:8000"
+    volumes:
+    - ".:/app:z"
     depends_on:
     - db
     env_file:
