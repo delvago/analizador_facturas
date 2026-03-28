@@ -1,36 +1,34 @@
-"""Welcome to Reflex! This file outlines the steps to create a basic app."""
-
 import reflex as rx
+import httpx
 
-from rxconfig import config
-
-
-class State(rx.State):
-    """The app state."""
-
-
+class Estado(rx.State):
+    mensaje_api: str = "Esperando datos..."
+    texto_factura : str = ""
+    
+    def obtener_datos(self):
+        respuesta = httpx.get("http://api:8000/")
+        datos = respuesta.json()
+        self.mensaje_api = datos["mensaje"]
+        
+    def enviar_datos(self):
+        enviar = {"texto":self.texto_factura}
+        respuesta = httpx.post("http://api:8000/", json=enviar)
+        self.mensaje_api = respuesta.json()["mensaje"]
+        
+        
+    
 def index() -> rx.Component:
-    # Welcome Page (Index)
-    return rx.container(
-        rx.color_mode.button(position="top-right"),
-        rx.vstack(
-            rx.heading("Welcome to Reflex!", size="9"),
-            rx.text(
-                "Get started by editing ",
-                rx.code(f"{config.app_name}/{config.app_name}.py"),
-                size="5",
+    return rx.vstack(#Apila los elementos de arriba hacia abajo en la pantalla
+        rx.heading("Analizador de Facturas"),
+        rx.button("Conectar con API", on_click=Estado.obtener_datos),
+        rx.text(Estado.mensaje_api),
+        rx.text_area(
+            placeholder = "Esperando datos factura...",
+            value = Estado.texto_factura,
+            on_change = Estado.set_texto_factura,
             ),
-            rx.link(
-                rx.button("Check out our docs!"),
-                href="https://reflex.dev/docs/getting-started/introduction/",
-                is_external=True,
-            ),
-            spacing="5",
-            justify="center",
-            min_height="85vh",
-        ),
+        rx.button("Enviar Factura", on_click=Estado.enviar_datos),
     )
-
 
 app = rx.App()
 app.add_page(index)
