@@ -5,11 +5,13 @@ class Estado(rx.State):
     mensaje_api: str = "Esperando datos..."
     texto_factura : str = ""
     
+    @rx.event
     def obtener_datos(self):
         respuesta = httpx.get("http://api:8000/")
         datos = respuesta.json()
         self.mensaje_api = datos["mensaje"]
-        
+    
+    @rx.event    
     def enviar_datos(self):
         enviar = {"texto":self.texto_factura}
         respuesta = httpx.post("http://api:8000/factura/", json=enviar)
