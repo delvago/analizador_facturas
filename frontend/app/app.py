@@ -2,10 +2,14 @@ import reflex as rx
 import httpx
 from app import style
 
+# ==========================================
+# 1. State (Back)
+# ==========================================
+
 class Estado(rx.State):
-    mensaje_api: str = "Esperando datos..."
+    mensaje_api: str = ""
     texto_factura : str = ""
-    chat_history : list[tuple[str, str]]
+    chat_history : list[tuple[str, str]] = []
     
     @rx.event
     def obtener_datos(self):
@@ -13,32 +17,23 @@ class Estado(rx.State):
         datos = respuesta.json()
         self.mensaje_api = datos["mensaje"]
     
-    @rx.event    
+    @rx.event
     def enviar_datos(self):
-        enviar = {"texto":self.texto_factura}
+        if self.texto_factura.strip() == "":
+            return
+        enviar = {"texto" : self.texto_factura}
         respuesta = httpx.post("http://api:8000/factura/", json=enviar)
         self.mensaje_api = respuesta.json()["mensaje"]
         self.chat_history.append((self.texto_factura, self.mensaje_api))
+        self.texto_factura = ""
         
     @rx.event
     def limpiar_chat(self):
         self.chat_history = []
-        
-        
-""" def index() -> rx.Component:
-    return rx.vstack(#Apila los elementos de arriba hacia abajo en la pantalla
-        rx.heading("Analizador de Facturas"),
-        rx.button("Conectar con API", on_click=Estado.obtener_datos),
-        rx.text_area(
-            placeholder = "Esperando datos factura...",
-            value = Estado.texto_factura,
-            on_change = Estado.set_texto_factura,
-            ),
-        rx.text(Estado.mensaje_api),
-        rx.button("Enviar Factura", on_click=Estado.enviar_datos),
-    ) """
 
-#FRONT END
+# ==========================================
+# 2. FRONT
+# ==========================================
 
 def qa(question:str, answer:str) -> rx.Component:
     return rx.box(
@@ -48,7 +43,7 @@ def qa(question:str, answer:str) -> rx.Component:
             ),
         rx.box(
             rx.text(answer, style=style.answer_style), 
-            text_alig="left",
+            text_align="left",
         ),
         margin_y="1em",
         width="100%",
@@ -103,6 +98,9 @@ def index() -> rx.Component:
             align="center",
         )
     )
-   
+
+# ==========================================
+# 3. APP
+# ==========================================  
 app = rx.App()
 app.add_page(index)
