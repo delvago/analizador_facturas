@@ -1,15 +1,21 @@
 import os
+import httpx
 from fastapi import FastAPI, Depends
 from pydantic import BaseModel #Librería que define de que forma recibe los datos la API
 from datetime import date
 from sqlalchemy import Column, Integer, String, Float, Date, create_engine
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
 
+
+# ==========================================
+# 0. CONFIGURACIÓN VARIABLES DE ENTORNO
+# ==========================================
+DATABASE_URL = os.getenv("DATABASE_URL")
+URL_N8N = os.getenv("URL_N8N")
+
 # ==========================================
 # 1. CONFIGURACIÓN DE LA BASE DE DATOS
 # ==========================================
-DATABASE_URL = os.getenv("DATABASE_URL")
-
 engine = create_engine(DATABASE_URL) #Base de datos a utilizar 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine) #Gestor de sesiones de la API
 Base = declarative_base()
@@ -73,5 +79,4 @@ def crear_gasto(nuevo_gasto: Gasto, db: Session = Depends(get_db)):
     db.add(gasto_db)
     db.commit()
     db.refresh(gasto_db)
-    
     return {"mensaje" : "Gasto guardado con éxito", "gasto": gasto_db}
