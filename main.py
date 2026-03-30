@@ -63,9 +63,16 @@ def ruta_principal():
 
 @app.post("/factura/")
 def procesar_factura(factura: FacturaRecibida):
-    return {"mensaje" : f"{factura.texto} factura recibida"}
-
-
+    n8n_data = {"texto_factura": factura.texto}
+    try:
+        n8n_response = httpx.post(URL_N8N, json=n8n_data)
+        if n8n_response.status_code == 200:
+            return {"mensaje" : f"Factura: {factura.texto} - Recibida"}
+        else:
+            return {"mensaje" : f"Error en n8n: Código {n8n_response.status_code}"}
+    except Exception as e:
+        return {"mensaje" : f"Fallo al intentar conectar con n8n: {str(e)}"}
+            
 @app.post("/gastos/")
 def crear_gasto(nuevo_gasto: Gasto, db: Session = Depends(get_db)):
     # Empaquetado de los datos para la base de datos
