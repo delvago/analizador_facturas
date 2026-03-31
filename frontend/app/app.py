@@ -10,12 +10,18 @@ class Estado(rx.State):
     mensaje_api: str = ""
     texto_factura : str = ""
     chat_history : list[tuple[str, str]] = []
+    datos : list[dict] = []
     
     @rx.event
-    def obtener_datos(self):
+    def datos_api(self):
         respuesta = httpx.get("http://api:8000/")
         datos = respuesta.json()
         self.mensaje_api = datos["mensaje"]
+        
+    @rx.event
+    def cargar_historial(self):
+        respuesta = httpx.get("http://api:8000/gastos/")
+        self.datos = respuesta.json()
     
     @rx.event
     def enviar_datos(self):

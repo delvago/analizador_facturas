@@ -75,15 +75,21 @@ def procesar_factura(factura: FacturaRecibida):
             
 @app.post("/gastos/")
 def crear_gasto(nuevo_gasto: Gasto, db: Session = Depends(get_db)):
-    # Empaquetado de los datos para la base de datos
+    #Empaquetado de los datos para la base de datos
     gasto_db = GastoDB(
         fecha=nuevo_gasto.fecha,
         valor=nuevo_gasto.valor,
         categoria=nuevo_gasto.categoria,
         id_usuario=nuevo_gasto.id_usuario
     )
-    # Guardado de datos en PostgreSQL
+    #Guardado de datos en PostgreSQL
     db.add(gasto_db)
     db.commit()
     db.refresh(gasto_db)
     return {"mensaje" : "Gasto guardado con éxito", "gasto": gasto_db}
+
+@app.get("/gastos/")
+def obtener_gastos(db: Session = Depends(get_db)):
+    #Obtenemos los datos de postgress
+    gastos = db.query(GastoDB).all()
+    return gastos
