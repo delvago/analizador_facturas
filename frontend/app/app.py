@@ -89,8 +89,42 @@ def action_bar() -> rx.Component:
         rx.button(
             "Limpiar Historial del chat",
             style=style.button_style,
-            on_click=Estado.limpiar_chat
+            on_click=Estado.limpiar_chat,
         )
+    )
+    
+def fila_gasto(gasto: dict) -> rx.Component:
+    return rx.table.row(
+        rx.table.cell(gasto["fecha"]),
+        rx.table.cell(gasto["valor"]),
+        rx.table.cell(gasto["categoria"]),
+        rx.table.cell(gasto["id_usuario"]),
+    )
+
+def tabla_gastos() -> rx.Component:
+    return rx.table.root(
+        rx.table.header(
+            rx.table.row(
+                rx.table.column_header_cell("fecha"),
+                rx.table.column_header_cell("valor"),
+                rx.table.column_header_cell("categoria"),
+                rx.table.column_header_cell("id_usuario"),
+            )
+        ),
+        rx.table.body(
+            rx.foreach(
+                Estado.datos,
+                fila_gasto,
+            )
+        ),
+        width="100%",
+        margin_top="2em"
+    )
+
+def actualizar_tabla() -> rx.Component:
+    return rx.button(
+        "Actualizar tabla",
+        on_click=Estado.cargar_historial,
     )
     
 def index() -> rx.Component:
@@ -101,6 +135,8 @@ def index() -> rx.Component:
             rx.text("Aquí podrás verificar el comportamiento de tus gastos."),
             chat(),
             action_bar(),
+            actualizar_tabla(),
+            tabla_gastos(),
             align="center",
         )
     )
