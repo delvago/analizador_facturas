@@ -1,6 +1,7 @@
 import reflex as rx
 import httpx
 from app import style
+from typing import Any
 
 # ==========================================
 # 1. State (Back)
@@ -11,6 +12,16 @@ class Estado(rx.State):
     texto_factura : str = ""
     chat_history : list[tuple[str, str]] = []
     datos : list[dict] = []
+    gastos_por_categoria : list[dict[str, Any]] = [
+        {"categoria": "alimentacion", "valor": 0},
+        {"categoria": "vivienda", "valor": 0},
+        {"categoria": "servicios", "valor": 0},
+        {"categoria": "transporte", "valor": 0},
+        {"categoria": "salud", "valor": 0},
+        {"categoria": "deudas", "valor": 0},
+        {"categoria": "ahorro", "valor": 0},
+        {"categoria": "ocio", "valor": 0},
+    ]
     
     @rx.event
     def datos_api(self):
@@ -22,6 +33,18 @@ class Estado(rx.State):
     def cargar_historial(self):
         respuesta = httpx.get("http://api:8000/gastos/")
         self.datos = respuesta.json()
+        
+        for item in self.gastos_por_categoria:
+            item["valor"] = 0
+        
+        for gasto in self.datos:
+            categoria_gasto = gasto.get("categoria")
+            valor_gasto = gasto.get("valor", 0)
+            for item in self.gastos_por_categoria:
+                if item["categoria"] == categoria_gasto:
+                    item["valor"] += valor_gasto
+                    break
+        
     
     @rx.event
     def enviar_datos(self):
@@ -127,6 +150,37 @@ def actualizar_tabla() -> rx.Component:
         on_click=Estado.cargar_historial,
     )
     
+def grafica_gastos() -> rx.Component:
+    return rx.recharts.bar_chart(
+        rx.recharts.bar(
+            data_key="valor",
+            fill="3b82f6",
+            radius=[4,4,0,0],
+        ),
+        rx.recharts.x_axis(data_key="categoria"),
+        rx.recharts.y_axis(),
+        rx.recharts.graphing_tooltip(),
+        data=Estado.gastos_por_categoria,
+        height=300,
+        width="100%",
+    )
+    
+def panel_dashboard() -> rx.Component:
+    return rx.card(
+        rx.vstack(
+            rx.heading("Resumen por Categoría", size="4", color="gray"),
+            rx.divider(),
+            grafica_gastos(),
+            width="100%",
+            spacing="4",
+        ),
+        width="100%",
+        max_width="800px",
+        box_shadow="lg",
+        border_radius="md",
+        padding="5",
+    )
+    
 def index() -> rx.Component:
     return rx.center(
         rx.vstack(
@@ -137,6 +191,7 @@ def index() -> rx.Component:
             action_bar(),
             actualizar_tabla(),
             tabla_gastos(),
+            panel_dashboard(),
             align="center",
         )
     )
