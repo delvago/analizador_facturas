@@ -9,8 +9,6 @@ from openai import OpenAI
 from datetime import date
 import json
 
-
-
 # ==========================================
 # 0. CONFIGURACIÓN VARIABLES DE ENTORNO
 # ==========================================
@@ -71,7 +69,7 @@ def ruta_principal():
 @app.post("/factura/")
 def procesar_factura(factura: FacturaRecibida, db: Session = Depends(get_db)):
     fecha_actual = date.today().isoformat()
-    instrucciones = f"""
+    instrucciones_system = f"""
     Eres un asistente financiero. Tu único trabajo es extraer ciertos datos de los mensajes del usuario y agregar otros definidos en un formato JSON estricto.
     La fecha actual es: {fecha_actual}
     
@@ -86,16 +84,17 @@ def procesar_factura(factura: FacturaRecibida, db: Session = Depends(get_db)):
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": instrucciones},
+                {"role": "system", "content": instrucciones_system},
                 {"role": "user", "content": factura.texto}
             ],
             response_format={"type": "json_object"},
             temperature=0
         )
         
-        #Convierte el json en un diccionario
+        #Convierte el json en un diccionario apto para python
         datos_ia = json.loads(response.choices[0].message.content)
         
+        #Estructuramos los datos a enviar a la db
         nuevo_gasto = GastoDB(
             fecha=datos_ia.get("fecha", fecha_actual),
             valor=float(datos_ia.get("valor", 0.0)),
@@ -103,6 +102,7 @@ def procesar_factura(factura: FacturaRecibida, db: Session = Depends(get_db)):
             id_usuario=int(datos_ia.get("id_usuario", 1))
         )
         
+        #Procesamos los datos en la db
         db.add(nuevo_gasto)
         db.commit()
         db.refresh(nuevo_gasto)

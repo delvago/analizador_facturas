@@ -30,6 +30,8 @@ services:
     - db
     volumes:
     - n8n_data:/home/node/.n8n
+    env_file:
+      - .env
   
   frontend:
     build: ./frontend
