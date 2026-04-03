@@ -45,7 +45,6 @@ class Estado(rx.State):
                     item["valor"] += valor_gasto
                     break
         
-    
     @rx.event
     def enviar_datos(self):
         if self.texto_factura.strip() == "":
@@ -148,20 +147,22 @@ def actualizar_tabla() -> rx.Component:
     return rx.button(
         "Actualizar tabla",
         on_click=Estado.cargar_historial,
+        size="3",
+        color_scheme="blue",
     )
     
 def grafica_gastos() -> rx.Component:
     return rx.recharts.bar_chart(
         rx.recharts.bar(
             data_key="valor",
-            fill="3b82f6",
-            radius=[4,4,0,0],
+            fill="#3b82f6", 
+            radius=[4, 4, 0, 0], 
         ),
         rx.recharts.x_axis(data_key="categoria"),
         rx.recharts.y_axis(),
-        rx.recharts.graphing_tooltip(),
+        rx.recharts.graphing_tooltip(), 
         data=Estado.gastos_por_categoria,
-        height=300,
+        height=350, 
         width="100%",
     )
     
@@ -182,18 +183,26 @@ def panel_dashboard() -> rx.Component:
     )
     
 def index() -> rx.Component:
-    return rx.center(
+    # rx.container es mucho mejor que rx.center para estructurar páginas completas
+    return rx.container(
         rx.vstack(
-            rx.heading("Analizador de Facturas"),
+            rx.heading("Analizador de Facturas", size="8"),
             rx.text("Bienvenido al aplicativo 'Analizador de facturas'."),
-            rx.text("Aquí podrás verificar el comportamiento de tus gastos."),
+            rx.text("Aquí podrás verificar el comportamiento de tus gastos."),            
             chat(),
-            action_bar(),
-            actualizar_tabla(),
+            action_bar(),            
+            rx.divider(margin_y="2em"),
+            rx.text("Información de gastos", size= "8"),          
+            actualizar_tabla(), 
             tabla_gastos(),
             panel_dashboard(),
             align="center",
-        )
+            width="100%",
+            spacing="5",
+        ),
+        max_width="1200px", 
+        width="100%",
+        padding="2em",
     )
 
 # ==========================================

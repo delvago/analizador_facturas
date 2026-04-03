@@ -5,13 +5,20 @@ from pydantic import BaseModel #Librería que define de que forma recibe los dat
 from datetime import date
 from sqlalchemy import Column, Integer, String, Float, Date, create_engine
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
+from openai import OpenAI
+from datetime import date
+import json
+
 
 
 # ==========================================
 # 0. CONFIGURACIÓN VARIABLES DE ENTORNO
 # ==========================================
 DATABASE_URL = os.getenv("DATABASE_URL")
-URL_N8N = os.getenv("URL_N8N")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+# Inicialización del cliente de OpenAI
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 # ==========================================
 # 1. CONFIGURACIÓN DE LA BASE DE DATOS
@@ -62,31 +69,50 @@ def ruta_principal():
     return {"mensaje" : "API del analizador de Gastos activa"}
 
 @app.post("/factura/")
-def procesar_factura(factura: FacturaRecibida):
-    n8n_data = {"texto_factura": factura.texto}
+def procesar_factura(factura: FacturaRecibida, db: Session = Depends(get_db)):
+    fecha_actual = date.today().isoformat()
+    instrucciones = f"""
+    Eres un asistente financiero. Tu único trabajo es extraer ciertos datos de los mensajes del usuario y agregar otros definidos en un formato JSON estricto.
+    La fecha actual es: {fecha_actual}
+    
+    Extrae:
+    - fecha (formato YYYY-MM-DD. Si el usuario no menciona una fecha en el texto, asume la fecha actual).
+    - valor (solo el número, como float).
+    - categoria (una palabra clave que describa el gasto estrictamente dentro de las siguientes categorías: vivienda, alimentacion, servicios, transporte, salud, deudas, ahorro, ocio).
+    - id_usuario (usa siempre el número 1).
+    """
+    
     try:
-        n8n_response = httpx.post(URL_N8N, json=n8n_data)
-        if n8n_response.status_code == 200:
-            return {"mensaje" : f"Factura: {factura.texto} - Recibida"}
-        else:
-            return {"mensaje" : f"Error en n8n: Código {n8n_response.status_code}"}
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": instrucciones},
+                {"role": "user", "content": factura.texto}
+            ],
+            response_format={"type": "json_object"},
+            temperature=0
+        )
+        
+        #Convierte el json en un diccionario
+        datos_ia = json.loads(response.choices[0].message.content)
+        
+        nuevo_gasto = GastoDB(
+            fecha=datos_ia.get("fecha", fecha_actual),
+            valor=float(datos_ia.get("valor", 0.0)),
+            categoria=datos_ia.get("categoria", ""),
+            id_usuario=int(datos_ia.get("id_usuario", 1))
+        )
+        
+        db.add(nuevo_gasto)
+        db.commit()
+        db.refresh(nuevo_gasto)
+        
+        return {
+            "mensaje": "Factura procesada y guardada con éxito",
+            "datos_extraidos": datos_ia   
+        }
     except Exception as e:
-        return {"mensaje" : f"Fallo al intentar conectar con n8n: {str(e)}"}
-            
-@app.post("/gastos/")
-def crear_gasto(nuevo_gasto: Gasto, db: Session = Depends(get_db)):
-    #Empaquetado de los datos para la base de datos
-    gasto_db = GastoDB(
-        fecha=nuevo_gasto.fecha,
-        valor=nuevo_gasto.valor,
-        categoria=nuevo_gasto.categoria,
-        id_usuario=nuevo_gasto.id_usuario
-    )
-    #Guardado de datos en PostgreSQL
-    db.add(gasto_db)
-    db.commit()
-    db.refresh(gasto_db)
-    return {"mensaje" : "Gasto guardado con éxito", "gasto": gasto_db}
+        return {"mensaje": f"Error al procesar la factura: {str(e)}"}
 
 @app.get("/gastos/")
 def obtener_gastos(db: Session = Depends(get_db)):
