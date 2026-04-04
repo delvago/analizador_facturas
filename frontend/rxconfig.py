@@ -6,5 +6,6 @@ config = rx.Config(
         rx.plugins.SitemapPlugin(),
         rx.plugins.TailwindV4Plugin(),
     ],
-    backend_port=8001
+    backend_port=8001,
+    vite_allowed_hosts= ["fedora.local", "localhost", "192.168.1.20"]
 )
