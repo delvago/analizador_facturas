@@ -41,6 +41,9 @@ POSTGRESS_PORT=5432
 
 # Variables para n8n
 N8N_PORT=5678
+# Añade estas variables si quieres que n8n reconozca estas variables de entorno
+N8N_ALLOW_ENV_VARIABLES=true
+N8N_BLOCK_ENV_ACCESS_IN_NODE=false
 ```
 
 ## 📦 Instalación y Despliegue
