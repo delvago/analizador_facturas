@@ -1,0 +1,205 @@
+{
+  "name": "analizador_facturas_reporte",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT categoria, SUM(valor) as total\nFROM gastos \nWHERE fecha >= CURRENT_DATE - INTERVAL '7 day'\nGROUP BY categoria;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -272,
+        -288
+      ],
+      "id": "94e11fd0-bc6f-42fd-a986-cd3aad7637d1",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "yDRl7zfgznmYVap2",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "david96vg@gmail.com",
+        "subject": "Informe de Gastos",
+        "message": "=<div style=\"font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f3f4f6;\">\n    <div style=\"background-color: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); border: 1px solid #e5e7eb;\">\n        \n        <h2 style=\"color: #0f172a; text-align: center; border-bottom: 3px solid #3b82f6; padding-bottom: 15px; margin-top: 0; font-weight: 700;\">\n            📊 Resumen Automático de Gastos\n        </h2>\n        \n        <div style=\"background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px 20px; border-radius: 4px; margin-top: 20px;\">\n            <h3 style=\"margin-top: 0; color: #1d4ed8; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;\">💡 Análisis de tu Asesor Financiero</h3>\n            <p style=\"font-size: 15px; color: #334155; line-height: 1.6; margin-bottom: 0; white-space: pre-wrap;\">{{ $json.output[0].content[0].text }}</p>\n        </div>\n        \n        <table style=\"width: 100%; border-collapse: collapse; margin-top: 30px; margin-bottom: 20px;\">\n            <thead>\n                <tr style=\"background-color: #f8fafc;\">\n                    <th style=\"padding: 14px; border-bottom: 2px solid #cbd5e1; text-align: left; color: #475569; font-weight: 600; font-size: 14px; text-transform: uppercase;\">Categoría</th>\n                    <th style=\"padding: 14px; border-bottom: 2px solid #cbd5e1; text-align: right; color: #475569; font-weight: 600; font-size: 14px; text-transform: uppercase;\">Total Gastado</th>\n                </tr>\n            </thead>\n            <tbody>\n                {{ $('Aggregate').item.json.data.map(gasto => `\n                <tr>\n                    <td style=\"padding: 14px; border-bottom: 1px solid #e2e8f0; color: #334155; font-size: 15px; text-transform: capitalize;\">\n                        <span style=\"display: inline-block; width: 24px;\">🏷️</span> ${gasto.categoria}\n                    </td>\n                    <td style=\"padding: 14px; border-bottom: 1px solid #e2e8f0; text-align: right; font-weight: 600; color: #1e293b; font-size: 15px;\">\n                        $${gasto.total.toLocaleString('es-CO')}\n                    </td>\n                </tr>\n                `).join('') }}\n            </tbody>\n        </table>\n        \n        <div style=\"text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb;\">\n            <p style=\"font-size: 12px; color: #94a3b8; margin: 0;\">\n                Generado por tu Analizador de Facturas 🤖\n            </p>\n        </div>\n        \n    </div>\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        528,
+        -288
+      ],
+      "id": "30a1d5ca-da04-4fba-8e76-db0493cf9021",
+      "name": "Send a message",
+      "webhookId": "b1e8cf3d-87f8-4192-9b5f-1a75b8e3ad86",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "0lz56f3O8jHt80zy",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        -288
+      ],
+      "id": "c0f4a2d7-7df1-49b5-9ae6-0338589abd5d",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "events": [
+          "init"
+        ]
+      },
+      "type": "n8n-nodes-base.n8nTrigger",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        -192
+      ],
+      "id": "60bb6f5a-6fff-4224-81e1-e763723b5e20",
+      "name": "Trigger al activar el workflow"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "daysInterval": 7
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -496,
+        -384
+      ],
+      "id": "42386ae9-eaf2-449e-aa9d-ced636299e6f",
+      "name": "Trigger programado"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Eres un asesor financiero experto. Tu objetivo es analizar los gastos de un usuario y generar un resumen corto en un formato texto.\nTu respuesta debe contener:\n-Un saludo breve.\n-Una evaluación profesional del comportamiento de tus gastos.\n-Un consejo financiero accionable y amigable.\n"
+            },
+            {
+              "role": "=user",
+              "content": "=Aquí están mis gastos de este periodo: {{ $json.toJsonString($json.data)}}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        176,
+        -288
+      ],
+      "id": "ea000b6c-7874-4bd1-95cb-cd1178461fbe",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YHTIMHrSM2tI6h6f",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger al activar el workflow": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger programado": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "bf0a444b-3f90-41e3-a3b2-5017a4a72e5e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "25e3696cdbb74164ee3735552caf3e680d8b719af1fc45770d837f76ca63320b"
+  },
+  "id": "WuDlBAKV0cnEiaZV",
+  "tags": []
+}
