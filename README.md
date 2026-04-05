@@ -30,13 +30,14 @@ Este proyecto es una aplicación integral diseñada para automatizar el registro
 Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
 
 ```env
+# Llave de OpenAI
 OPENAI_API_KEY=tu_clave_aqui
-DATABASE_URL=postgresql://user:password@db:5432/facturas_db
 
 # Variables para Postgres
-POSTGRES_USER=user
-POSTGRES_PASSWORD=password
-POSTGRES_DB=facturas_db
+POSTGRES_USER=tuusuario
+POSTGRES_PASSWORD=tucontraseña
+POSTGRES_DB=gastos_db
+DATABASE_URL=postgresql://tuusuario:tucontraseña@db:5432/gastos_db
 POSTGRESS_PORT=5432
 
 # Variables para n8n
