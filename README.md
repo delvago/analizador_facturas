@@ -77,8 +77,8 @@ El proyecto incluye un workflow preconfigurado de n8n que consulta tu base de da
 3. En el menú principal, ve a la sección **Workflows** y haz clic en **Add Workflow**.
 4. En la esquina superior derecha, selecciona el menú de opciones (...) y haz clic en **Import from File**.
 5. Selecciona el archivo `analizador_facturas_reporte.json` que se encuentra en la carpeta `n8n_workflow`.
-6. Configura las credenciales dentro de los nodos (PostgreSQL, OpenAI y Gmail) puedes ingresarlas manualmente o configurarlas mediante variables de entorno.
-7. Haz clic en el boton Publish (o pon el switch en **Active**) en la esquina superior derecha par que el disparador automático (`Schedule Trigger`) comience a funcionar.
+6. Configura las credenciales dentro de los nodos (**PostgreSQL, OpenAI y Gmail**) puedes ingresarlas manualmente o configurarlas mediante variables de entorno.
+7. Haz clic en el boton **Publish** (o pon el switch en **Active**) en la esquina superior derecha para que el disparador automático (`Schedule Trigger`) comience a funcionar.
 
 ## Estructura del Proyecto
 
