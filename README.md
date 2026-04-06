@@ -59,9 +59,9 @@ docker-compose up --build
 ```
 
 Una vez finalizado el proceso, podrás acceder a:
-- **Frontend**: `http://localhost:3000`
+- **Frontend**: `http://localhost:0000`
 - **API (Docs)**: `http://localhost:8000/docs`
-- **n8n**: `http://localhost:5678`
+- **n8n**: `http://localhost:0001`
 
 ## Uso de la Aplicación
 
