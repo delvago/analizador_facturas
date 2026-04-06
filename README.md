@@ -87,7 +87,7 @@ El proyecto incluye un workflow preconfigurado de n8n que consulta tu base de da
 - `/main.py`: Lógica del servidor FastAPI y conexión con OpenAI.
 - `/frontend/app/app.py`: Interfaz de usuario y lógica de estado construida con Reflex.
 - `docker-compose.yml`: Configuración de los contenedores de la infraestructura.
-- `n8n_workflow/analizador_facturas_reporte.json`: Workflow de n8n listo para importar.
+- `/n8n_workflow/analizador_facturas_reporte.json`: Workflow de n8n listo para importar.
 
 ## Futuras consideraciones
 - Mejorar el front.
