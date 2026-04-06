@@ -38,10 +38,12 @@ POSTGRES_USER=tuusuario
 POSTGRES_PASSWORD=tucontraseña
 POSTGRES_DB=gastos_db
 DATABASE_URL=postgresql://tuusuario:tucontraseña@db:5432/gastos_db
-POSTGRESS_PORT=5432
+# Añade tu puerto
+POSTGRESS_PORT=0000
 
 # Variables para n8n
-N8N_PORT=5678
+# Añade tu puerto
+N8N_PORT=0001
 
 # Añade ambas si quieres que n8n reconozca las variables del archivo .env
 N8N_ALLOW_ENV_VARIABLES=true
